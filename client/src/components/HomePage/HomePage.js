@@ -10,7 +10,7 @@ const HomePage = () => {
 
   const startCall = () => {
     const uid = shortid.generate();
-    history.push(`/${uid}#init`);
+    history.push(`/${uid}#init`); //it is use for defiend the admin && # is use for remove these things as a path 
   };
 
   return (

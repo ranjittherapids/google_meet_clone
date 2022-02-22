@@ -3,10 +3,12 @@ import {
   faVideo,
   faMicrophone,
   faPhone,
+  faVideoSlash,
   faAngleUp,
   faClosedCaptioning,
   faDesktop,
   faMicrophoneSlash,
+
 } from "@fortawesome/free-solid-svg-icons";
 import "./CallPageFooter.scss";
 
@@ -16,6 +18,8 @@ const CallPageFooter = ({
   screenShare,
   isAudio,
   toggleAudio,
+  isVideo,
+  toggleVideo,
   disconnectCall,
 }) => {
   return (
@@ -39,8 +43,8 @@ const CallPageFooter = ({
         <div className="icon-block" onClick={disconnectCall}>
           <FontAwesomeIcon className="icon red" icon={faPhone} />
         </div>
-        <div className="icon-block">
-          <FontAwesomeIcon className="icon" icon={faVideo} />
+        <div className={`icon-block ${!isVideo ? "red-bg" : null}`}onClick={() => toggleVideo(!isVideo)} >
+          <FontAwesomeIcon className="icon" icon={isVideo? faVideo : faVideoSlash} />
         </div>
       </div>
       <div className="right-item">
@@ -51,7 +55,7 @@ const CallPageFooter = ({
 
         {isPresenting ? (
           <div className="icon-block" onClick={stopScreenShare}>
-            <FontAwesomeIcon className="icon red" icon={faDesktop} />
+         <FontAwesomeIcon className="icon red" icon={faDesktop} />
             <p className="title">Stop presenting</p>
           </div>
         ) : (

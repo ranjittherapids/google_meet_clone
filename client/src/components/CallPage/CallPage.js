@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useState,useRef } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import { getRequest, postRequest } from "./../../utils/apiRequests";
 import {
@@ -15,8 +15,9 @@ import Alert from "../UI/Alert/Alert";
 import MeetingInfo from "../UI/MeetingInfo/MeetingInfo";
 import CallPageFooter from "../UI/CallPageFooter/CallPageFooter";
 import CallPageHeader from "../UI/CallPageHeader/CallPageHeader";
-
-let peer = null;
+ 
+ let peer = null;
+// let myvideo=null
 const socket = io.connect(process.env.REACT_APP_BASE_URL);
 const initialState = [];
 
@@ -26,7 +27,6 @@ const CallPage = () => {
   const isAdmin = window.location.hash == "#init" ? true : false;
   const url = `${window.location.origin}${window.location.pathname}`;
   let alertTimeout = null;
-
   const [messageList, messageListReducer] = useReducer(
     MessageListReducer,
     initialState
@@ -39,11 +39,14 @@ const CallPage = () => {
   const [isMessenger, setIsMessenger] = useState(false);
   const [messageAlert, setMessageAlert] = useState({});
   const [isAudio, setIsAudio] = useState(true);
-
+  const [isVideo, setIsVideo] = useState(true);
+const remoteVideo = useRef('')
+const userVideo = useRef('')
   useEffect(() => {
     if (isAdmin) {
       setMeetInfoPopup(true);
     }
+
     initWebRTC();
     socket.on("code", (data) => {
       if (data.url === url) {
@@ -66,14 +69,17 @@ const CallPage = () => {
         audio: true,
       })
       .then((stream) => {
+        console.log(stream,'stream')
         setStreamObj(stream);
-
+        userVideo.current.srcObject=stream
         peer = new Peer({
           initiator: isAdmin,
           trickle: false,
           stream: stream,
         });
-
+        
+  // you don't need streams here
+ 
         if (!isAdmin) {
           getRecieverCode();
         }
@@ -92,7 +98,10 @@ const CallPage = () => {
 
           }
         });
-
+        // peer2.on("signal", async (data) => {
+        //   console.log(data)
+        //   peer.signal(data)
+        // });
         peer.on("connect", () => {
           // wait for 'connect' event before using the data channel
         });
@@ -128,21 +137,22 @@ const CallPage = () => {
 
         peer.on("stream", (stream) => {
           // got remote video stream, now let's show it in a video tag
-          let video = document.querySelector("video");
-
+          let video = remoteVideo.current
+          console.log(stream,'streamstream')
           if ("srcObject" in video) {
             video.srcObject = stream;
           } else {
             video.src = window.URL.createObjectURL(stream); // for older browsers
           }
-
           video.play();
         });
 
       })
-      .catch(() => { });
+      .catch((e) => {console.log(e,'err') });
   };
 
+
+  /////////////////////////////////////
   const sendMsg = (msg) => {
     peer.send(msg);
     messageListReducer({
@@ -192,7 +202,11 @@ const CallPage = () => {
     streamObj.getAudioTracks()[0].enabled = value;
     setIsAudio(value);
   };
-
+  const toggleVideo = (value) => {
+    streamObj.getVideoTracks()[0].enabled = value;
+    setIsVideo(value);
+  };
+ 
   const disconnectCall = () => {
     peer.destroy();
     history.push("/");
@@ -200,8 +214,15 @@ const CallPage = () => {
   };
 
   return (
-    <div className="callpage-container">
-      <video className="video-container" src="" controls></video>
+    <div className="callpage-container border border-danger">
+      <div className="share_screen ">
+      <video ref={userVideo} autoPlay></video> 
+      <video className="border border-danger m-5"  ref={remoteVideo} autoPlay></video> 
+      </div>
+      <div className="video_screen">
+     
+         </div>
+       
 
       <CallPageHeader
         isMessenger={isMessenger}
@@ -214,7 +235,9 @@ const CallPage = () => {
         stopScreenShare={stopScreenShare}
         screenShare={screenShare}
         isAudio={isAudio}
+        isVideo={isVideo}
         toggleAudio={toggleAudio}
+        toggleVideo={toggleVideo}
         disconnectCall={disconnectCall}
       />
 
